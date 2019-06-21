@@ -45,6 +45,111 @@ export default class Calendar extends React.Component {
         return firstDay;
     };
 
+    setMonth = (month) => {
+        let monthNo = this.months.indexOf(month);
+        let dateContext = Object.assign({}, this.state.dateContext);
+        dateContext = moment(dateContext).set("month", monthNo);
+        this.setState({
+            dateContext: dateContext
+        });
+    }
+
+    onSelectChange = (e, data) => {
+        this.setMonth(data);
+        this.props.onMonthChange && this.props.onMonthChange();
+    }
+
+    SelectList = (props) => {
+        let popup = props.data.map((data) => {
+            return (
+                <div key={data}>
+                    <a href="#" onClick={(e) => {
+                        this.onSelectChange(e, data)
+                    }}>
+                        {data}
+                    </a>
+                </div>
+            )
+        })
+        return (
+            <div className="month-popup">
+                {popup}
+            </div>
+        )
+    }
+
+    onChangeMonth = (e, month) => {
+        this.setState({
+            showMonthPopup: !this.state.showMonthPopup
+        });
+    }
+
+    MonthNav = () => {
+        return (
+            <span className="label-month"
+                  onClick={(e) => {
+                      this.onChangeMonth(e, this.month())
+                  }}>
+                {this.month()}
+                {this.state.showMonthPopup &&
+                <this.SelectList data={this.months}/>
+                }
+            </span>
+        );
+    }
+
+    showYearEditor = () => {
+        this.setState({
+            showYearNav: true
+        });
+    }
+
+    setYear = (year) => {
+        let dateContext = Object.assign({}, this.state.dateContext);
+        dateContext = moment(dateContext).set("year", year);
+        this.setState({
+            dateContext: dateContext
+        })
+    }
+
+    onYearChange = (e) => {
+        this.setYear(e.target.value);
+        this.props.onYearChange && this.props.onYearChange(e, e.target.value);
+    }
+
+    onKeyUpYear = (e) => {
+        if (e.which === 13 || e.which === 27) {
+            this.setYear(e.target.value);
+            this.setState({
+                showYearNav: false
+            })
+        }
+    }
+
+    YearNav = () => {
+        return (
+            this.state.showYearNav ?
+                <input
+                    defaultValue={this.year()}
+                    className="editor-year"
+                    ref={(yearInput) => {
+                        this.yearInput = yearInput
+                    }}
+                    onKeyUp={(e) => this.onKeyUpYear(e)}
+                    onChange={(e) => this.onYearChange(e)}
+                    type="number"
+                    placeholder="year"/>
+                :
+                <span
+                    className="label-year"
+                    onDoubleClick={(e) => {
+                        this.showYearEditor()
+                    }}>
+                {this.year()}
+            </span>
+        );
+    }
+
     render() {
         // Map the weekdays i.e Sun, Mon, Tue etc as <td>
         let weekdays = this.weekdaysShort.map((day) => {
@@ -65,9 +170,9 @@ export default class Calendar extends React.Component {
 
         let daysInMonth = [];
         for (let d = 1; d <= this.daysInMonth(); d++) {
-            let className = (d === this.currentDay() ? "day current-day": "day");
+            let className = (d === this.currentDay() ? "day current-day" : "day");
             daysInMonth.push(
-                <td key={d} className={className} >
+                <td key={d} className={className}>
                     <span>{d}</span>
                 </td>
             );
@@ -96,7 +201,7 @@ export default class Calendar extends React.Component {
 
         let trElems = rows.map((d, i) => {
             return (
-                <tr key={i*100}>
+                <tr key={i * 100}>
                     {d}
                 </tr>
             );
@@ -108,7 +213,11 @@ export default class Calendar extends React.Component {
                 <table className="calendar">
                     <thead>
                     <tr className="calendar-header">
-
+                        <td colSpan="5">
+                            <this.MonthNav/>
+                            {" "}
+                            <this.YearNav/>
+                        </td>
                     </tr>
                     </thead>
                     <tbody>
